@@ -31,17 +31,18 @@
             this.btnEnviarMensaje = new System.Windows.Forms.Button();
             this.txtMensaje = new System.Windows.Forms.TextBox();
             this.txtLog = new System.Windows.Forms.TextBox();
+            this.comboBoxDestinatarios = new System.Windows.Forms.ComboBox();
             this.SuspendLayout();
             // 
             // btnEnviarMensaje
             // 
             this.btnEnviarMensaje.Location = new System.Drawing.Point(409, 12);
             this.btnEnviarMensaje.Name = "btnEnviarMensaje";
-            this.btnEnviarMensaje.Size = new System.Drawing.Size(127, 49);
+            this.btnEnviarMensaje.Size = new System.Drawing.Size(127, 21);
             this.btnEnviarMensaje.TabIndex = 3;
-            this.btnEnviarMensaje.Text = "Enviar mensaje a todos los clientes";
+            this.btnEnviarMensaje.Text = "Enviar mensaje";
             this.btnEnviarMensaje.UseVisualStyleBackColor = true;
-            this.btnEnviarMensaje.Click += new System.EventHandler(this.btnEnviarMensaje_Click);
+            this.btnEnviarMensaje.Click += new System.EventHandler(this.BtnEnviarMensaje_Click);
             // 
             // txtMensaje
             // 
@@ -60,22 +61,34 @@
             this.txtLog.Location = new System.Drawing.Point(12, 67);
             this.txtLog.Multiline = true;
             this.txtLog.Name = "txtLog";
+            this.txtLog.ReadOnly = true;
             this.txtLog.ScrollBars = System.Windows.Forms.ScrollBars.Both;
             this.txtLog.Size = new System.Drawing.Size(524, 416);
             this.txtLog.TabIndex = 4;
             this.txtLog.WordWrap = false;
+            // 
+            // comboBoxDestinatarios
+            // 
+            this.comboBoxDestinatarios.FormattingEnabled = true;
+            this.comboBoxDestinatarios.Items.AddRange(new object[] {
+            "Todos"});
+            this.comboBoxDestinatarios.Location = new System.Drawing.Point(12, 39);
+            this.comboBoxDestinatarios.Name = "comboBoxDestinatarios";
+            this.comboBoxDestinatarios.Size = new System.Drawing.Size(143, 21);
+            this.comboBoxDestinatarios.TabIndex = 5;
             // 
             // ServidorForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(548, 495);
+            this.Controls.Add(this.comboBoxDestinatarios);
             this.Controls.Add(this.txtLog);
             this.Controls.Add(this.btnEnviarMensaje);
             this.Controls.Add(this.txtMensaje);
             this.Name = "ServidorForm";
             this.Text = "Servidor";
-            this.Load += new System.EventHandler(this.Form1_Load);
+            this.Load += new System.EventHandler(this.ServidorForm_Load);
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -86,6 +99,7 @@
         private System.Windows.Forms.Button btnEnviarMensaje;
         private System.Windows.Forms.TextBox txtMensaje;
         private System.Windows.Forms.TextBox txtLog;
+        private System.Windows.Forms.ComboBox comboBoxDestinatarios;
     }
 }
 

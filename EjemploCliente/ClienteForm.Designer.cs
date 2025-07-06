@@ -36,6 +36,7 @@
             this.txtMensaje = new System.Windows.Forms.TextBox();
             this.btnEnviarMensaje = new System.Windows.Forms.Button();
             this.txtLog = new System.Windows.Forms.TextBox();
+            this.comboBoxDestinatarios = new System.Windows.Forms.ComboBox();
             this.SuspendLayout();
             // 
             // label1
@@ -80,7 +81,7 @@
             this.btnConectar.TabIndex = 3;
             this.btnConectar.Text = "Conectar";
             this.btnConectar.UseVisualStyleBackColor = true;
-            this.btnConectar.Click += new System.EventHandler(this.btnConectar_Click);
+            this.btnConectar.Click += new System.EventHandler(this.BtnConectar_Click);
             // 
             // txtMensaje
             // 
@@ -93,13 +94,13 @@
             // btnEnviarMensaje
             // 
             this.btnEnviarMensaje.Enabled = false;
-            this.btnEnviarMensaje.Location = new System.Drawing.Point(381, 38);
+            this.btnEnviarMensaje.Location = new System.Drawing.Point(224, 38);
             this.btnEnviarMensaje.Name = "btnEnviarMensaje";
             this.btnEnviarMensaje.Size = new System.Drawing.Size(75, 23);
             this.btnEnviarMensaje.TabIndex = 5;
             this.btnEnviarMensaje.Text = "Enviar";
             this.btnEnviarMensaje.UseVisualStyleBackColor = true;
-            this.btnEnviarMensaje.Click += new System.EventHandler(this.btnEnviarMensaje_Click);
+            this.btnEnviarMensaje.Click += new System.EventHandler(this.BtnEnviarMensaje_Click);
             // 
             // txtLog
             // 
@@ -110,16 +111,28 @@
             this.txtLog.Location = new System.Drawing.Point(12, 111);
             this.txtLog.Multiline = true;
             this.txtLog.Name = "txtLog";
+            this.txtLog.ReadOnly = true;
             this.txtLog.ScrollBars = System.Windows.Forms.ScrollBars.Both;
             this.txtLog.Size = new System.Drawing.Size(475, 357);
             this.txtLog.TabIndex = 7;
             this.txtLog.WordWrap = false;
+            // 
+            // comboBoxDestinatarios
+            // 
+            this.comboBoxDestinatarios.FormattingEnabled = true;
+            this.comboBoxDestinatarios.Items.AddRange(new object[] {
+            "Todos"});
+            this.comboBoxDestinatarios.Location = new System.Drawing.Point(305, 38);
+            this.comboBoxDestinatarios.Name = "comboBoxDestinatarios";
+            this.comboBoxDestinatarios.Size = new System.Drawing.Size(151, 21);
+            this.comboBoxDestinatarios.TabIndex = 8;
             // 
             // ClienteForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(499, 480);
+            this.Controls.Add(this.comboBoxDestinatarios);
             this.Controls.Add(this.txtLog);
             this.Controls.Add(this.btnEnviarMensaje);
             this.Controls.Add(this.txtMensaje);
@@ -146,6 +159,7 @@
         private System.Windows.Forms.TextBox txtMensaje;
         private System.Windows.Forms.Button btnEnviarMensaje;
         private System.Windows.Forms.TextBox txtLog;
+        private System.Windows.Forms.ComboBox comboBoxDestinatarios;
     }
 }
 

@@ -9,10 +9,7 @@ namespace EjemploCliente
     // Declaro una subclase de EventArgs para el evento DatosRecibidos
     public class DatosRecibidosEventArgs : EventArgs
     {
-        public DatosRecibidosEventArgs(string datos)
-        {
-            DatosRecibidos = datos;
-        }
+        public DatosRecibidosEventArgs(string datos) => DatosRecibidos = datos;
 
         public string DatosRecibidos { get; set; }
     }
@@ -26,35 +23,32 @@ namespace EjemploCliente
         public bool Conectado { get; private set; }
 
         // Si estoy conectado esta propiedad nos permite obtener la IP y el puerto local
-        public IPEndPoint LocalEndPoint
-        {
-            get { return socket?.LocalEndPoint as IPEndPoint; }
-        }
+        public IPEndPoint LocalEndPoint => socket?.LocalEndPoint as IPEndPoint;
 
         // Si estoy conectado esta propiedad nos permite obtener la IP y el puerto del servidor
-        public IPEndPoint RemoteEndPoint
-        {
-            get { return socket?.RemoteEndPoint as IPEndPoint; }
-        }
+        public IPEndPoint RemoteEndPoint => socket?.RemoteEndPoint as IPEndPoint;
 
         public event EventHandler ConexionTerminada;
         public event EventHandler<DatosRecibidosEventArgs> DatosRecibidos;
 
         public void Conectar(string ip, int puerto)
         {
-            if (Conectado) return;
+            if (!Conectado)
+            {
+                // Creamos un socket con la configuración correcta para enviar y recibir datos sobre TCP
+                // Ver: https://docs.microsoft.com/en-us/dotnet/api/system.net.sockets.sockettype
+                socket = new Socket(SocketType.Stream, ProtocolType.Tcp);
+                // Me conecto al objeto de la clase Servidor, determinado por los parámetros ip y puerto
+                socket.Connect(ip, puerto);
+                Conectado = true;
 
-            // Creamos un socket con la configuración correcta para enviar y recibir datos sobre TCP
-            // Ver: https://docs.microsoft.com/en-us/dotnet/api/system.net.sockets.sockettype
-            socket = new Socket(SocketType.Stream, ProtocolType.Tcp);
-            // Me conecto al objeto de la clase Servidor, determinado por los parámetros ip y puerto
-            socket.Connect(ip, puerto);
-            Conectado = true;
-
-            // Creo e inicio un thread para que escuche los mensajes enviados por el Servidor
-            thread = new Thread(LeerSocket);
-            thread.IsBackground = true; // Background thread (https://docs.microsoft.com/en-us/dotnet/standard/threading/foreground-and-background-threads)
-            thread.Start();
+                // Creo e inicio un thread para que escuche los mensajes enviados por el Servidor
+                thread = new Thread(LeerSocket)
+                {
+                    IsBackground = true // Background thread (https://docs.microsoft.com/en-us/dotnet/standard/threading/foreground-and-background-threads)
+                };
+                thread.Start();
+            }
         }
 
         public void EnviarDatos(string datos)

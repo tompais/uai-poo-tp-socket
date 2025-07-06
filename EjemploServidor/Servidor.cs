@@ -1,19 +1,17 @@
 ﻿using System;
+using System.Collections.Concurrent;
+using System.Linq;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
 using System.Threading;
-using System.Collections.Concurrent;
 
 namespace EjemploServidor
 {
     // Declaro una subclase de EventArgs para los eventos del servidor
     public class ServidorEventArgs : EventArgs
     {
-        public ServidorEventArgs(IPEndPoint ep)
-        {
-            EndPoint = ep;
-        }
+        public ServidorEventArgs(IPEndPoint ep) => EndPoint = ep;
 
         public IPEndPoint EndPoint { get; }
     }
@@ -44,7 +42,7 @@ namespace EjemploServidor
         // En este dictionary vamos a guardar la información de todos los clientes conectados.
         // ConcurrentDictionary se puede usar desde múltiples threads sin necesidad de locks.
         // Ver: https://docs.microsoft.com/en-us/dotnet/api/system.collections.concurrent.concurrentdictionary-2
-        ConcurrentDictionary<IPEndPoint, InfoDeUnCliente> clientes = new ConcurrentDictionary<IPEndPoint, InfoDeUnCliente>();
+        readonly ConcurrentDictionary<IPEndPoint, InfoDeUnCliente> clientes = new ConcurrentDictionary<IPEndPoint, InfoDeUnCliente>();
 
         public event EventHandler<ServidorEventArgs> NuevaConexion;
         public event EventHandler<ServidorEventArgs> ConexionTerminada;
@@ -52,10 +50,7 @@ namespace EjemploServidor
 
         public int PuertoDeEscucha { get; }
 
-        public Servidor(int puerto)
-        {
-            PuertoDeEscucha = puerto;
-        }
+        public Servidor(int puerto) => PuertoDeEscucha = puerto;
 
         public void Escuchar()
         {
@@ -65,31 +60,49 @@ namespace EjemploServidor
             listener.Start();
 
             // Creo un thread para que se quede escuchando la llegada de los clientes sin interferir con la UI
-            listenerThread = new Thread(EsperarCliente);
-            // La siguiente línea hace que cuando se cierre la aplicación también se detenga el thread de escucha.
-            // Ver: https://docs.microsoft.com/en-us/dotnet/api/system.threading.thread.isbackground
-            listenerThread.IsBackground = true;
+            listenerThread = new Thread(EsperarCliente)
+            {
+                // La siguiente línea hace que cuando se cierre la aplicación también se detenga el thread de escucha.
+                // Ver: https://docs.microsoft.com/en-us/dotnet/api/system.threading.thread.isbackground
+                IsBackground = true
+            };
             listenerThread.Start();
         }
 
         public void Cerrar()
         {
             // Recorro todos los clientes y voy cerrando las conexiones
-            foreach (var cliente in clientes.Values)
+            clientes.Values.ToList().ForEach(cliente =>
             {
-                // Cierro la conexión con el cliente
+                // Cierro el thread que escucha al cliente
                 cliente.Socket.Close();
-            }
+            });
         }
 
         public void EnviarDatos(string datos)
         {
             // Recorro todos los clientes conectados y les envío el mensaje en el parámetro datos
-            foreach (var cliente in clientes.Values)
+            clientes.Values.ToList().ForEach(cliente =>
             {
                 // Envío el mensaje codificado en UTF-8 (https://es.wikipedia.org/wiki/UTF-8)
                 cliente.Socket.Send(Encoding.UTF8.GetBytes(datos));
+            });
+        }
+
+        public void EnviarDatosACliente(IPEndPoint endPoint, string datos)
+        {
+            if (clientes.TryGetValue(endPoint, out var cliente))
+            {
+                cliente.Socket.Send(Encoding.UTF8.GetBytes(datos));
             }
+        }
+
+        private void EnviarListaDeClientes()
+        {
+            // Arma la lista de todos los clientes conectados
+            var lista = string.Join(",", clientes.Keys.Select(ep => $"{ep.Address}:{ep.Port}"));
+            var mensaje = $"CLIENTES:{lista}";
+            EnviarDatos(mensaje);
         }
 
         private void EsperarCliente()
@@ -106,8 +119,10 @@ namespace EjemploServidor
 
                 // Creo un thread para que se encargue de escuchar los mensajes del cliente.
                 // Uso una función anónima para que el thread tenga acceso a la ip del cliente actual
-                var thread = new Thread(() => LeerSocket(endPoint));
-                thread.IsBackground = true;
+                var thread = new Thread(() => LeerSocket(endPoint))
+                {
+                    IsBackground = true
+                };
 
                 // Agrego la información del cliente al dictionary de clientes
                 clientes[endPoint] = new InfoDeUnCliente()
@@ -118,6 +133,8 @@ namespace EjemploServidor
 
                 // Disparo el evento NuevaConexion
                 NuevaConexion?.Invoke(this, new ServidorEventArgs(endPoint));
+
+                EnviarListaDeClientes();
 
                 // Inicio el thread encargado de escuchar los mensajes del cliente
                 thread.Start();
@@ -141,6 +158,28 @@ namespace EjemploServidor
                         // Decodifico el mensaje recibido usando UTF-8 (https://es.wikipedia.org/wiki/UTF-8)
                         var datosRecibidos = Encoding.UTF8.GetString(buffer, 0, cantidadRecibida);
 
+                        // Procesar el mensaje recibido
+                        if (datosRecibidos.StartsWith("ALL:"))
+                        {
+                            string mensaje = datosRecibidos.Substring(4);
+                            EnviarDatos(mensaje); // ya reenvía a todos
+                        }
+                        else if (datosRecibidos.Contains(":"))
+                        {
+                            var partes = datosRecibidos.Split(new[] { ':' }, 3);
+                            if (partes.Length == 3)
+                            {
+                                string ip = partes[0];
+                                int puerto = int.Parse(partes[1]);
+                                string mensaje = partes[2];
+                                var targetEndPoint = new IPEndPoint(IPAddress.Parse(ip), puerto);
+                                if (clientes.TryGetValue(targetEndPoint, out var targetCliente))
+                                {
+                                    targetCliente.Socket.Send(Encoding.UTF8.GetBytes(mensaje));
+                                }
+                            }
+                        }
+
                         // Disparo el evento de la recepción del mensaje
                         DatosRecibidos?.Invoke(this, new DatosRecibidosEventArgs(endPoint, datosRecibidos));
                     }
@@ -162,7 +201,8 @@ namespace EjemploServidor
                 }
             }
             // Elimino el cliente del dictionary que guarda la información de los clientes
-            clientes.TryRemove(endPoint, out cliente);
+            clientes.TryRemove(endPoint, out _);
+            EnviarListaDeClientes();
         }
     }
 }
