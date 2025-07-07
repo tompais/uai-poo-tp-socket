@@ -44,17 +44,15 @@ namespace EjemploCliente
                     comboBoxDestinatarios.Items.Clear();
                     comboBoxDestinatarios.Items.Add("Todos");
 
-                    // Compara contra la IP y puerto que el servidor ve (RemoteEndPoint)
-                    if (cliente.RemoteEndPoint != null)
+                    var local = cliente.LocalEndPoint;
+                    var ip = local.Address;
+                    if (ip.IsIPv4MappedToIPv6)
                     {
-                        var miDireccion = $"{cliente.RemoteEndPoint.Address}:{cliente.RemoteEndPoint.Port}";
-                        lista.Where(cli => !string.Equals(cli, miDireccion)).ToList().ForEach(cli => comboBoxDestinatarios.Items.Add(cli));
+                        ip = ip.MapToIPv4();
                     }
-                    else
-                    {
-                        // Si RemoteEndPoint aún no está, agrega todos
-                        lista.ToList().ForEach(cli => comboBoxDestinatarios.Items.Add(cli));
-                    }
+
+                    var miDireccion = $"{ip}:{local.Port}";
+                    lista.Where(cli => !string.Equals(cli, miDireccion)).ToList().ForEach(cli => comboBoxDestinatarios.Items.Add(cli));
 
                     comboBoxDestinatarios.SelectedIndex = 0;
                 }));
